@@ -14,7 +14,7 @@ const addExpenceService = async (expence: Expence) => {
 const getExpencesService = async () => {
   return new Promise((resolve, reject) => {
     resolve([
-      { category: "test", subcategory: "test", amount: 1, date: "test" },
+      { category: "test1", subcategory: "test1", amount: 1, date: "test1111" },
     ]);
   });
 };
