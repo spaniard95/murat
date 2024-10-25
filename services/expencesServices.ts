@@ -13,6 +13,9 @@ const addExpenceService = async (expence: Expence) => {
 
 const getExpencesService = async () => {
   return new Promise((resolve, reject) => {
+    const databaseUrl = Deno.env.get("DATABASE_URL")!;
+
+    console.log("Database URL:", databaseUrl);
     resolve([
       { category: "test1", subcategory: "test1", amount: 1, date: "test1111" },
     ]);
