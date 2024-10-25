@@ -27,6 +27,7 @@ const expencesController = {
   },
   getAllByCategory: async (req: Request, res: Response) => {
     const { category } = req.params;
+
     try {
       const expences = await getAllByCategoryService(category);
       res.status(200).json(expences);

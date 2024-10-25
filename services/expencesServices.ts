@@ -1,3 +1,4 @@
+import { db } from "../database.ts";
 interface Expence {
   category: string;
   subcategory?: string;
@@ -12,22 +13,19 @@ const addExpenceService = async (expence: Expence) => {
 };
 
 const getExpencesService = async () => {
-  return new Promise((resolve, reject) => {
-    const databaseUrl = Deno.env.get("DATABASE_URL")!;
-
-    console.log("Database URL:", databaseUrl);
-    resolve([
-      { category: "test1", subcategory: "test1", amount: 1, date: "test1111" },
-    ]);
-  });
+  try {
+    return await db`SELECT * FROM books`;
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 const getAllByCategoryService = async (category: string) => {
-  return new Promise((resolve, reject) => {
-    resolve([
-      { category: "test", subcategory: "test", amount: 1, date: "test" },
-    ]);
-  });
+  try {
+    return await db`SELECT * FROM books`;
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 const getAllByDateService = async (
