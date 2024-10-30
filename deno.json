@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --allow-read --allow-env --allow-net --allow-write  --env-file main.ts"
+    "dev": "deno run --allow-read --allow-env --allow-net --allow-write  --env-file=.env.local main.ts"
   },
   "imports": {
     "@neon/serverless": "jsr:@neon/serverless@^0.10.1",
