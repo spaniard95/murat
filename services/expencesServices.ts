@@ -8,7 +8,7 @@ interface Expence {
 
 const addExpenceService = async (expence: Expence) => {
   return new Promise((resolve, reject) => {
-    resolve({ message: "Expence added successfully" });
+    resolve({ message: "Expence added successfully " });
   });
 };
 
