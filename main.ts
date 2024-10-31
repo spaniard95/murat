@@ -11,3 +11,5 @@ app.use("/expences", expencesRouter);
 app.listen(port, () => {
   console.log("Server is running on port", port);
 });
+
+// CHECK: Add error handling middleware

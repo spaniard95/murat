@@ -34,7 +34,7 @@ expencesRouter.get(
       console.error(error);
       res.status(500).send();
     }
-  }
+  },
 );
 
 expencesRouter.get("/all/date", async (req: Request, res: Response) => {

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import {
   addService,
-  getAllService,
   getAllByCategoryService,
   getAllByDateService,
+  getAllService,
 } from "../services/expencesServices.ts";
 
 const expencesController = {
@@ -40,7 +40,7 @@ const expencesController = {
     const { day, month, year } = req.query;
 
     try {
-      const expences = await getAllByDateService(day, month, year);
+      const expences = await getAllByDateService(month, year, day);
       res.status(200).json(expences);
     } catch (error) {
       console.error(error);
