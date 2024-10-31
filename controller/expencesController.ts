@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import {
-  addExpenceService,
-  getExpencesService,
+  addService,
+  getAllService,
   getAllByCategoryService,
   getAllByDateService,
 } from "../services/expencesServices.ts";
@@ -9,7 +9,7 @@ import {
 const expencesController = {
   addExpence: async (req: Request, res: Response) => {
     try {
-      await addExpenceService(req.body);
+      await addService(req.body);
       res.status(201).json({ message: "Expence added successfully" });
     } catch (error) {
       console.error(error);
@@ -18,7 +18,7 @@ const expencesController = {
   },
   getAllExpences: async (_req: any, res: any) => {
     try {
-      const expences = await getExpencesService();
+      const expences = await getAllService();
       res.status(200).json(expences);
     } catch (error) {
       console.error(error);

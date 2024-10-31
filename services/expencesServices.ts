@@ -6,15 +6,23 @@ interface Expence {
   date: string;
 }
 
-const addExpenceService = async (expence: Expence) => {
+const addService = async (expence: Expence) => {
   return new Promise((resolve, reject) => {
     resolve({ message: "Expence added successfully " });
   });
 };
 
-const getExpencesService = async () => {
+const getAllService = async () => {
   try {
-    return await db`SELECT * FROM books`;
+    return await db`SELECT e.id AS expense_id,
+       e.amount,
+       e.expense_date,
+       e.notes,
+       c.name AS category_name,
+       s.name AS subcategory_name
+FROM expenses e
+JOIN expenses_categories c ON e.category_id = c.id
+JOIN expenses_subcategories s ON e.subcategory_id = s.id; `;
   } catch (e) {
     console.log(e);
   }
@@ -41,8 +49,8 @@ const getAllByDateService = async (
 };
 
 export {
-  addExpenceService,
-  getExpencesService,
+  addService,
+  getAllService,
   getAllByCategoryService,
   getAllByDateService,
 };
