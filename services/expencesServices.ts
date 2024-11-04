@@ -111,7 +111,7 @@ const getAllByDateService = async (
 
   // Validate the inputs
   // TODO: make the validations utility functions
-  if (isValidMonth(month)) {
+  if (!isValidMonth(month)) {
     throw new Error("Request: getAllExpenses-Invalid month provided");
   }
   if (!isValidYear(currentYear)) {
