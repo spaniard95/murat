@@ -13,3 +13,5 @@ app.listen(port, () => {
 });
 
 // CHECK: Add error handling middleware
+// TODO: ts clean up
+// TODO: tasks like es lint on commit

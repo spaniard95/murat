@@ -25,17 +25,17 @@ expencesRouter.get("/all", async (_req: Request, res: Response) => {
   }
 });
 
-expencesRouter.get(
-  "/all/category/:category",
-  async (req: Request, res: Response) => {
-    try {
-      await controller.getAllByCategory(req, res);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send();
-    }
-  },
-);
+// expencesRouter.get(
+//   "/all/category/:category",
+//   async (req: Request, res: Response) => {
+//     try {
+//       await controller.getAllByCategory(req, res);
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).send();
+//     }
+//   },
+// );
 
 expencesRouter.get("/all/date", async (req: Request, res: Response) => {
   try {

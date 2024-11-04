@@ -1,16 +1,76 @@
 import { db } from "../database.ts";
-import type { Expense } from "./types.ts";
-interface Expence {
-  category: string;
-  subcategory?: string;
-  amount: number;
-  date: string;
-}
+import {
+  isValidDay,
+  isValidMonth,
+  isValidYear,
+} from "../lib/validators/dateValidators.ts";
 
-const addService = async (expence: Expence) => {
-  return new Promise((resolve, reject) => {
-    resolve({ message: "Expence added successfully " });
-  });
+import type { Expense } from "./types.ts";
+
+const addService = async (expence: Expense) => {
+  const { category, subcategory, amount, date, notes } = expence;
+
+  // Validate the input
+  if (!amount || isNaN(amount)) {
+    throw new Error("Invalid amount provided");
+  }
+  if (!date || isNaN(Date.parse(date))) {
+    throw new Error("Invalid expense date provided");
+  }
+  if (!category) {
+    throw new Error("Category is required");
+  }
+
+  try {
+    await db`BEGIN`;
+
+    // Check if the category exists
+    let categoryResult = await db`
+      SELECT id FROM expenses_categories WHERE name = ${category}
+    `;
+    if (categoryResult.length === 0) {
+      // Insert the new category
+      console.log("New category added ", category);
+      categoryResult = await db`
+        INSERT INTO expenses_categories (name) VALUES (${category})
+        RETURNING id
+      `;
+    }
+    const categoryId = categoryResult[0].id;
+
+    // Check if the subcategory exists
+    let subcategoryId = null;
+    if (subcategory) {
+      let subcategoryResult = await db`
+        SELECT id FROM expenses_subcategories WHERE name = ${subcategory}
+      `;
+      if (subcategoryResult.length === 0) {
+        // Insert the new subcategory
+        console.log("New subcategory added ", subcategory);
+        subcategoryResult = await db`
+          INSERT INTO expenses_subcategories (name, category_id) VALUES (${subcategory}, ${categoryId})
+          RETURNING id
+        `;
+      }
+      subcategoryId = subcategoryResult[0].id;
+    }
+
+    // Insert the expense
+    await db`
+      INSERT INTO expenses (amount, expense_date, notes, category_id, subcategory_id)
+      VALUES (${amount}, ${date}, ${
+      notes || ""
+    }, ${categoryId}, ${subcategoryId})
+    `;
+
+    await db`COMMIT`;
+
+    return { message: "Expense added successfully" };
+  } catch (error) {
+    await db`ROLLBACK`;
+    console.error(error);
+    throw new Error("Failed to add expense");
+  }
 };
 
 const getAllService = async () => {
@@ -31,15 +91,15 @@ const getAllService = async () => {
   }
 };
 
-const getAllByCategoryService = async (category: string) => {
-  try {
-    return await db`SELECT * FROM books`;
-  } catch (e) {
-    console.log(e);
-  }
-};
+// const getAllByCategoryService = async (category: string) => {
+//   try {
+//     return await db`SELECT * FROM books`;
+//   } catch (e) {
+//     console.log(e);
+//   }
+// };
 
-// this service requires as input the month, if not specific year the current year will be used, day is optional but doesnt work at the moment
+// this service requires as input the month, if the year is not specified the current year will be used, day is optional but doesnt work at the moment
 // QUESTION: should I also make the month optional and default it the current month?
 const getAllByDateService = async (
   month: string,
@@ -47,25 +107,21 @@ const getAllByDateService = async (
   day?: string
 ) => {
   const currentDate = new Date();
-  const currentYear = year ?? currentDate.getFullYear();
+  const currentYear = year ?? currentDate.getFullYear().toString();
 
   // Validate the inputs
   // TODO: make the validations utility functions
-  if (isNaN(Number(month)) || Number(month) < 1 || Number(month) > 12) {
+  if (!isValidMonth(month)) {
     throw new Error("Request: getAllExpenses-Invalid month provided");
   }
-  if (
-    isNaN(Number(currentYear)) ||
-    Number(currentYear) < 1815 ||
-    Number(currentYear) > 3000
-  ) {
+  if (!isValidYear(currentYear)) {
     throw new Error("Request: getAllExpenses-Invalid year provided");
   }
-  if (day && (isNaN(Number(day)) || Number(day) < 1 || Number(day) > 31)) {
+  if (day && !isValidDay(day)) {
     throw new Error("Request: getAllExpenses-Invalid day provided");
   }
 
-  // TODO: check why this doesnt work
+  // TODO: check why the blow line doesnt work when added to the query
   //  ${day ? db`AND EXTRACT(DAY FROM e.expense_date) = ${day}` : ""}
   try {
     const expenses = (await db`
@@ -96,7 +152,7 @@ const getAllByDateService = async (
 
 export {
   addService,
-  getAllByCategoryService,
+  // getAllByCategoryService,
   getAllByDateService,
   getAllService,
 };

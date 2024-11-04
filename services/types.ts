@@ -1,5 +1,5 @@
 export interface Expense {
-  id: number;
+  id?: number; // TODO: in the response is i have the id but on the request i dont need it
   category: string;
   subcategory: string;
   amount: number;
