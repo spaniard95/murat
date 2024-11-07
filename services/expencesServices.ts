@@ -74,6 +74,9 @@ const addService = async (expence: Expense) => {
 };
 
 const getAllService = async () => {
+  // if subcategory is connected with category, does it make sense to return the category name?
+  // or should remove from thedb the category column and just use the subcategory column?
+  // and retrive both the category and subcategory name
   try {
     return await db`    
       SELECT e.id AS expense_id,
