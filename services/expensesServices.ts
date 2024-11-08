@@ -7,8 +7,33 @@ import {
 
 import type { Expense } from "./types.ts";
 
-const addService = async (expence: Expense) => {
-  const { category, subcategory, amount, date, notes } = expence;
+type AddExpenceOptions = {
+  ifCategoryExistsAddNew?: boolean;
+  ifSubcategoryExistsAddNew?: boolean;
+};
+
+class CategoryNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CategoryNotFoundError";
+  }
+}
+
+class SubcategoryNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SubcategoryNotFoundError";
+  }
+}
+
+const addExpenseService = async (
+  expense: Expense,
+  options: AddExpenceOptions = {
+    ifCategoryExistsAddNew: false, // by default do not add a new category
+    ifSubcategoryExistsAddNew: false, // by default do not add a new subcategory
+  }
+) => {
+  const { category, subcategory, amount, date, notes } = expense;
 
   // Validate the input
   if (!amount || isNaN(amount)) {
@@ -25,16 +50,11 @@ const addService = async (expence: Expense) => {
     await db`BEGIN`;
 
     // Check if the category exists
-    let categoryResult = await db`
-      SELECT id FROM expenses_categories WHERE name = ${category}
-    `;
+    const categoryResult = await db`
+     SELECT id FROM expenses_categories WHERE name = ${category}
+   `;
     if (categoryResult.length === 0) {
-      // Insert the new category
-      console.log("New category added ", category);
-      categoryResult = await db`
-        INSERT INTO expenses_categories (name) VALUES (${category})
-        RETURNING id
-      `;
+      throw new CategoryNotFoundError("Category does not exist");
     }
     const categoryId = categoryResult[0].id;
 
@@ -45,12 +65,15 @@ const addService = async (expence: Expense) => {
         SELECT id FROM expenses_subcategories WHERE name = ${subcategory}
       `;
       if (subcategoryResult.length === 0) {
+        if (!options?.ifSubcategoryExistsAddNew) {
+          throw new SubcategoryNotFoundError("Subcategory does not exist");
+        }
         // Insert the new subcategory
-        console.log("New subcategory added ", subcategory);
         subcategoryResult = await db`
           INSERT INTO expenses_subcategories (name, category_id) VALUES (${subcategory}, ${categoryId})
           RETURNING id
         `;
+        console.log("New subcategory added ", subcategory);
       }
       subcategoryId = subcategoryResult[0].id;
     }
@@ -69,11 +92,16 @@ const addService = async (expence: Expense) => {
   } catch (error) {
     await db`ROLLBACK`;
     console.error(error);
-    throw new Error("Failed to add expense");
+    if (
+      error instanceof CategoryNotFoundError ||
+      error instanceof SubcategoryNotFoundError
+    ) {
+      throw error; // Re-throw specific errors to be handled by the controller
+    }
   }
 };
 
-const getAllService = async () => {
+const getAllExpensesService = async () => {
   // if subcategory is connected with category, does it make sense to return the category name?
   // or should remove from thedb the category column and just use the subcategory column?
   // and retrive both the category and subcategory name
@@ -104,7 +132,7 @@ const getAllService = async () => {
 
 // this service requires as input the month, if the year is not specified the current year will be used, day is optional but doesnt work at the moment
 // QUESTION: should I also make the month optional and default it the current month?
-const getAllByDateService = async (
+const getAllExpensesByDateService = async (
   month: string,
   year?: string,
   day?: string
@@ -127,7 +155,7 @@ const getAllByDateService = async (
   // TODO: check why the blow line doesnt work when added to the query
   //  ${day ? db`AND EXTRACT(DAY FROM e.expense_date) = ${day}` : ""}
   try {
-    const expenses = (await db`
+    const expenses = await db`
       SELECT e.id AS expense_id,
              e.amount,
              e.expense_date,
@@ -139,13 +167,15 @@ const getAllByDateService = async (
       JOIN expenses_subcategories s ON e.subcategory_id = s.id
        WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear}
         AND EXTRACT(MONTH FROM e.expense_date) = ${month};
-    `) as Expense[];
+    `;
 
     const totalAmount = expenses.reduce(
-      (sum: number, expense: Expense) => sum + expense.amount,
+      (sum: number, expense) => sum + parseFloat(expense.amount),
       0
     );
-    return { month, year, expenses, totalAmount };
+
+    totalAmount.toFixed(2);
+    return { month, year, expenses, totalAmount: totalAmount.toFixed(2) };
   } catch (e) {
     console.log(e);
     // TODO: log the specific error- ex. invalid month
@@ -154,8 +184,10 @@ const getAllByDateService = async (
 };
 
 export {
-  addService,
+  addExpenseService,
   // getAllByCategoryService,
-  getAllByDateService,
-  getAllService,
+  getAllExpensesByDateService,
+  getAllExpensesService,
+  CategoryNotFoundError,
+  SubcategoryNotFoundError,
 };
