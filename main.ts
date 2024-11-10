@@ -36,3 +36,9 @@ app.listen(port, () => {
 
 // fix github actions
 // check if they do anything at all and if they are needed
+
+// maybe group requests by get, post, put, delete
+// THINK: maybe the controller should do only the required checks in the context of the controller and the services should do the rest
+// the service probably should be on itself foolproof and the controller should only check validations that are specific to the controller
+// ex. this request requres a category and a subcategory => check on the controller
+// ex. type validations => check on the service

@@ -6,6 +6,7 @@ import {
   getAllExpensesByDateService,
   CategoryNotFoundError,
   SubcategoryNotFoundError,
+  getAllCategoriesWithSubcategories,
 } from "../services/expensesServices.ts";
 import { Expense } from "../services/types.ts";
 
@@ -92,6 +93,15 @@ const expensesController = {
     } catch (error) {
       console.error(error);
       res.status(500).send("Failed to get expenses");
+    }
+  },
+  getAllCategoriesWithSubcategories: async (_req: Request, res: Response) => {
+    try {
+      const categories = await getAllCategoriesWithSubcategories();
+      res.status(200).json(categories);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Failed to get categories");
     }
   },
 };

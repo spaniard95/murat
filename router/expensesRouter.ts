@@ -46,4 +46,13 @@ expensesRouter.get("/all/date", async (req: Request, res: Response) => {
   }
 });
 
+expensesRouter.get("/categories", async (_req: Request, res: Response) => {
+  try {
+    await controller.getAllCategoriesWithSubcategories(_req, res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send();
+  }
+});
+
 export default expensesRouter;

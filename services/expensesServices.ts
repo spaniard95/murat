@@ -12,6 +12,11 @@ type AddExpenceOptions = {
   ifSubcategoryExistsAddNew?: boolean;
 };
 
+interface CategoryWithSubcategories {
+  category_name: string;
+  subcategories: string[];
+}
+
 class CategoryNotFoundError extends Error {
   constructor(message: string) {
     super(message);
@@ -25,6 +30,42 @@ class SubcategoryNotFoundError extends Error {
     this.name = "SubcategoryNotFoundError";
   }
 }
+
+// get all categories with their subcategories, and group all the subcategories under the category
+// ex. [{category_name: "Food", subcategories: ["Groceries", "Restaurants"]}]
+const getAllCategoriesWithSubcategories = async (): Promise<
+  CategoryWithSubcategories[]
+> => {
+  try {
+    // @ts-ignore
+    const data: { category_name: string; subcategory_name: string }[] =
+      await db`
+      SELECT c.name AS category_name, s.name AS subcategory_name
+      FROM expenses_categories c
+      JOIN expenses_subcategories s ON c.id = s.category_id;
+    `;
+
+    const categoryMap: { [key: string]: string[] } = {};
+
+    data.forEach(
+      (item: { category_name: string; subcategory_name: string }) => {
+        const category = item.category_name;
+        if (!categoryMap[category]) {
+          categoryMap[category] = [];
+        }
+        categoryMap[category].push(item.subcategory_name);
+      }
+    );
+
+    return Object.keys(categoryMap).map((category) => ({
+      category_name: category,
+      subcategories: categoryMap[category],
+    }));
+  } catch (e) {
+    console.log(e);
+    throw new Error("Failed to fetch categories with subcategories");
+  }
+};
 
 const addExpenseService = async (
   expense: Expense,
@@ -130,7 +171,7 @@ const getAllExpensesService = async () => {
 //   }
 // };
 
-// this service requires as input the month, if the year is not specified the current year will be used, day is optional but doesnt work at the moment
+// this service requires as input the month, if the year is not specified the current year will be used, day is optional but is disabled for now
 // QUESTION: should I also make the month optional and default it the current month?
 const getAllExpensesByDateService = async (
   month: string,
@@ -141,7 +182,6 @@ const getAllExpensesByDateService = async (
   const currentYear = year ?? currentDate.getFullYear().toString();
 
   // Validate the inputs
-  // TODO: make the validations utility functions
   if (!isValidMonth(month)) {
     throw new Error("Request: getAllExpenses-Invalid month provided");
   }
@@ -152,7 +192,7 @@ const getAllExpensesByDateService = async (
     throw new Error("Request: getAllExpenses-Invalid day provided");
   }
 
-  // TODO: check why the blow line doesnt work when added to the query
+  //  TODO: check why the blow line doesnt work when added to the query
   //  ${day ? db`AND EXTRACT(DAY FROM e.expense_date) = ${day}` : ""}
   try {
     const expenses = await db`
@@ -169,13 +209,7 @@ const getAllExpensesByDateService = async (
         AND EXTRACT(MONTH FROM e.expense_date) = ${month};
     `;
 
-    const totalAmount = expenses.reduce(
-      (sum: number, expense) => sum + parseFloat(expense.amount),
-      0
-    );
-
-    totalAmount.toFixed(2);
-    return { month, year, expenses, totalAmount: totalAmount.toFixed(2) };
+    return { expenses };
   } catch (e) {
     console.log(e);
     // TODO: log the specific error- ex. invalid month
@@ -190,4 +224,5 @@ export {
   getAllExpensesService,
   CategoryNotFoundError,
   SubcategoryNotFoundError,
+  getAllCategoriesWithSubcategories,
 };
