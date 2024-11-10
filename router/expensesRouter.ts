@@ -55,4 +55,22 @@ expensesRouter.get("/categories", async (_req: Request, res: Response) => {
   }
 });
 
+expensesRouter.post("/categories/add", async (req: Request, res: Response) => {
+  try {
+    await controller.addCategory(req, res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send();
+  }
+});
+// addMonthGoalsService
+expensesRouter.post("/monthGoals/add", async (req: Request, res: Response) => {
+  try {
+    await controller.addMonthGoals(req, res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send();
+  }
+});
+
 export default expensesRouter;

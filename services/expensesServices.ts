@@ -217,6 +217,91 @@ const getAllExpensesByDateService = async (
   }
 };
 
+// add a new category
+const addCategoryService = async (category: string) => {
+  try {
+    await db`
+      INSERT INTO expenses_categories (name) VALUES (${category})
+    `;
+    return { message: "Category added successfully" };
+  } catch (e) {
+    console.log(e);
+    throw new Error("Failed to add category");
+  }
+};
+
+// add a new subcategory connected to a category
+const addSubcategoryService = async (category: string, subcategory: string) => {
+  try {
+    // Check if the category exists
+    const categoryResult = await db`
+     SELECT id FROM expenses_categories WHERE name = ${category}
+   `;
+    if (categoryResult.length === 0) {
+      throw new CategoryNotFoundError("Category does not exist");
+    }
+    const categoryId = categoryResult[0].id;
+
+    // Check if the subcategory exists
+    let subcategoryId = null;
+    let subcategoryResult = await db`
+        SELECT id FROM expenses_subcategories WHERE name = ${subcategory}
+      `;
+    if (subcategoryResult.length === 0) {
+      // Insert the new subcategory
+      subcategoryResult = await db`
+          INSERT INTO expenses_subcategories (name, category_id) VALUES (${subcategory}, ${categoryId})
+          RETURNING id
+        `;
+      console.log("New subcategory added ", subcategory);
+    }
+    subcategoryId = subcategoryResult[0].id;
+  } catch (e) {
+    console.log(e);
+    throw new Error("Failed to add subcategory");
+  }
+};
+
+// add goals for a month
+const addMonthGoalsService = async (
+  month: number,
+  year: number,
+  category: string,
+  amount: number,
+  notes?: string
+) => {
+  // Validate the input in the future
+
+  try {
+    // Check if the category exists
+    const categoryResult = await db`
+     SELECT id FROM expenses_categories WHERE name = ${category}
+   `;
+    if (categoryResult.length === 0) {
+      throw new CategoryNotFoundError("Category does not exist");
+    }
+
+    // check if the goal already exists
+    const goalResult = await db`
+    SELECT id FROM goals WHERE month = ${month} AND year = ${year} AND category_id = ${categoryResult[0].id}
+  `;
+    if (goalResult.length > 0) {
+      throw new Error("Goal for this month already exists");
+    }
+
+    // Insert the goal
+    await db`
+    INSERT INTO goals (month, year, category_id, amount, notes)
+    VALUES (${month}, ${year}, ${categoryResult[0].id}, ${amount}, ${notes})
+  `;
+
+    return { message: "Goal added successfully" };
+  } catch (e) {
+    console.log(e);
+    throw new Error("Service Failed to add goal");
+  }
+};
+
 export {
   addExpenseService,
   // getAllByCategoryService,
@@ -225,4 +310,7 @@ export {
   CategoryNotFoundError,
   SubcategoryNotFoundError,
   getAllCategoriesWithSubcategories,
+  addCategoryService,
+  addSubcategoryService,
+  addMonthGoalsService,
 };

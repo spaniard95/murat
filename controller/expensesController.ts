@@ -7,6 +7,9 @@ import {
   CategoryNotFoundError,
   SubcategoryNotFoundError,
   getAllCategoriesWithSubcategories,
+  addCategoryService,
+  addSubcategoryService,
+  addMonthGoalsService,
 } from "../services/expensesServices.ts";
 import { Expense } from "../services/types.ts";
 
@@ -102,6 +105,59 @@ const expensesController = {
     } catch (error) {
       console.error(error);
       res.status(500).send("Failed to get categories");
+    }
+  },
+  addCategory: async (req: Request, res: Response) => {
+    try {
+      const { category } = req.body;
+      if (!category) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      await addCategoryService(category);
+
+      res.status(201).json({ message: "Category added successfully" });
+    } catch (error) {
+      if (error instanceof CategoryNotFoundError) {
+        res.status(400).json({ error: error.message });
+      } else {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  },
+  addSubcategory: async (req: Request, res: Response) => {
+    try {
+      const { category, subcategory } = req.body;
+      if (!category || !subcategory) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      await addSubcategoryService(category, subcategory);
+
+      res.status(201).json({ message: "Subcategory added successfully" });
+    } catch (error) {
+      if (error instanceof CategoryNotFoundError) {
+        res.status(400).json({ error: error.message });
+      } else {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  },
+  addMonthGoals: async (req: Request, res: Response) => {
+    try {
+      const { month, year, category, goal, notes } = req.body;
+      if (!month || !year || !category || !goal) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      await addMonthGoalsService(month, year, category, goal, notes);
+
+      res.status(201).json({ message: "Goals added successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
     }
   },
 };
