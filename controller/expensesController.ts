@@ -12,13 +12,14 @@ import {
   addMonthGoalsService,
   CategoryGoalAlreadyExistsError,
 } from "../services/expensesServices.ts";
-import { Expense } from "../services/types.ts";
+
+import { AddExpenseDTO, AddMonthGoalsDTO } from "./types.dto.ts";
 
 const expensesController = {
   addExpense: async (req: Request, res: Response) => {
     try {
       const { category, subcategory, amount, date, notes } =
-        req.body as Expense; // TODO: check if this is the correct way to type the body
+        req.body as AddExpenseDTO;
 
       // if no date is provided, use the current date
       const currentDate = date ?? new Date().toISOString().split("T")[0];
@@ -27,7 +28,6 @@ const expensesController = {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Validate the input
       const newDate = new Date(currentDate);
       if (isNaN(newDate.getTime())) {
         return res.status(400).json({ message: "Invalid date format" });
@@ -137,7 +137,8 @@ const expensesController = {
   },
   addMonthGoals: async (req: Request, res: Response) => {
     try {
-      const { month, year, category, goalAmount, notes } = req.body;
+      const { month, year, category, goalAmount, notes } =
+        req.body as AddMonthGoalsDTO;
       if (!month || !year || !category || !goalAmount) {
         return res.status(400).json({ message: "Missing required fields" });
       }

@@ -5,17 +5,11 @@ import {
   isValidYear,
 } from "../lib/validators/dateValidators.ts";
 
-import type { Expense } from "./types.ts";
-
-type AddExpenceOptions = {
-  ifCategoryExistsAddNew?: boolean;
-  ifSubcategoryExistsAddNew?: boolean;
-};
-
-interface CategoryWithSubcategories {
-  category_name: string;
-  subcategories: string[];
-}
+import type {
+  Expense,
+  AddExpenceOptions,
+  CategoryWithSubcategories,
+} from "./types.ts";
 
 class CategoryNotFoundError extends Error {
   constructor(message: string) {

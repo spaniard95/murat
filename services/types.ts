@@ -1,8 +1,17 @@
 export interface Expense {
-  id?: number; // TODO: in the response i have the id but on the request i dont need it
   category: string;
   subcategory: string;
   amount: number;
   date: string;
   notes?: string;
+}
+
+export type AddExpenceOptions = {
+  ifCategoryExistsAddNew?: boolean;
+  ifSubcategoryExistsAddNew?: boolean;
+};
+
+export interface CategoryWithSubcategories {
+  category_name: string;
+  subcategories: string[];
 }
