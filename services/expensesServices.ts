@@ -31,6 +31,13 @@ class SubcategoryNotFoundError extends Error {
   }
 }
 
+class CategoryGoalAlreadyExistsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CategoryGoalAlreadyExistsError";
+  }
+}
+
 // get all categories with their subcategories, and group all the subcategories under the category
 // ex. [{category_name: "Food", subcategories: ["Groceries", "Restaurants"]}]
 const getAllCategoriesWithSubcategories = async (): Promise<
@@ -163,14 +170,6 @@ const getAllExpensesService = async () => {
   }
 };
 
-// const getAllByCategoryService = async (category: string) => {
-//   try {
-//     return await db`SELECT * FROM books`;
-//   } catch (e) {
-//     console.log(e);
-//   }
-// };
-
 // this service requires as input the month, if the year is not specified the current year will be used, day is optional but is disabled for now
 // QUESTION: should I also make the month optional and default it the current month?
 const getAllExpensesByDateService = async (
@@ -262,12 +261,12 @@ const addSubcategoryService = async (category: string, subcategory: string) => {
   }
 };
 
-// add goals for a month
+// add category expenses goal for a specific month
 const addMonthGoalsService = async (
   month: number,
   year: number,
   category: string,
-  amount: number,
+  goalAmount: number,
   notes?: string
 ) => {
   // Validate the input in the future
@@ -281,34 +280,42 @@ const addMonthGoalsService = async (
       throw new CategoryNotFoundError("Category does not exist");
     }
 
-    // check if the goal already exists
+    // check if the goalAmount already exists
     const goalResult = await db`
-    SELECT id FROM goals WHERE month = ${month} AND year = ${year} AND category_id = ${categoryResult[0].id}
+    SELECT id FROM expenses_month_goals WHERE month = ${month} AND year = ${year} AND category_id = ${categoryResult[0].id}
   `;
     if (goalResult.length > 0) {
-      throw new Error("Goal for this month already exists");
+      throw new CategoryGoalAlreadyExistsError(
+        `Goal for category ${category} already exists for the month ${month} and year ${year}`
+      );
     }
 
-    // Insert the goal
+    // Insert the goalAmount
     await db`
-    INSERT INTO goals (month, year, category_id, amount, notes)
-    VALUES (${month}, ${year}, ${categoryResult[0].id}, ${amount}, ${notes})
+    INSERT INTO expenses_month_goals (month, year, category_id, goalAmount, notes)
+    VALUES (${month}, ${year}, ${categoryResult[0].id}, ${goalAmount}, ${notes})
   `;
 
     return { message: "Goal added successfully" };
   } catch (e) {
     console.log(e);
-    throw new Error("Service Failed to add goal");
+    if (
+      e instanceof CategoryNotFoundError ||
+      e instanceof CategoryGoalAlreadyExistsError
+    ) {
+      throw e; // Re-throw specific errors to be handled by the controller
+    }
+    throw new Error("Failed to add goal");
   }
 };
 
 export {
   addExpenseService,
-  // getAllByCategoryService,
   getAllExpensesByDateService,
   getAllExpensesService,
   CategoryNotFoundError,
   SubcategoryNotFoundError,
+  CategoryGoalAlreadyExistsError,
   getAllCategoriesWithSubcategories,
   addCategoryService,
   addSubcategoryService,

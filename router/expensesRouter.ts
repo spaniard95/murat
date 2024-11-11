@@ -63,7 +63,7 @@ expensesRouter.post("/categories/add", async (req: Request, res: Response) => {
     res.status(500).send();
   }
 });
-// addMonthGoalsService
+
 expensesRouter.post("/monthGoals/add", async (req: Request, res: Response) => {
   try {
     await controller.addMonthGoals(req, res);

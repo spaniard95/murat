@@ -14,9 +14,7 @@ app.listen(port, () => {
 
 // BEFORE NEW REQUESTS AND FEATURES, FIX AND CLEAN THE ALREADY ESTABLISHED CODE AND STRUCTURE
 
-// CHECK: Add error handling middleware
-// THINK: should i create a type like Expense in a way that on the controller that will automatically validate if the fields are appropriate?
-// do a hybrid ts and runtime type
+// add dto for the requests
 // CHECK: do i need the router layer or should i just use the controller layer?
 // create checker functions, that look on the db if this exists
 
@@ -24,11 +22,6 @@ app.listen(port, () => {
 // TODO: tasks like es lint on commit
 // TODO: add tests
 // simple like returns 400 with message if no category is provided
-
-// TODO: new request //add a new category & subcategory
-// do it first diferent and then check for one more dynamic that maybe inserts both at the same time
-// TODO: new request monthGoals
-// THINK: should i add a new table for the goals or should i add a new column in the expenses table?
 
 // TODO: table or request for previous months expenses (maybe a reccuring entry every previous month or done when the user finalizes it)
 // should i make calculations in the service or should be done on the fe?
@@ -42,3 +35,5 @@ app.listen(port, () => {
 // the service probably should be on itself foolproof and the controller should only check validations that are specific to the controller
 // ex. this request requres a category and a subcategory => check on the controller
 // ex. type validations => check on the service
+
+// add dto for the requests

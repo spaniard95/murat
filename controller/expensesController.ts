@@ -10,6 +10,7 @@ import {
   addCategoryService,
   addSubcategoryService,
   addMonthGoalsService,
+  CategoryGoalAlreadyExistsError,
 } from "../services/expensesServices.ts";
 import { Expense } from "../services/types.ts";
 
@@ -76,17 +77,6 @@ const expensesController = {
       res.status(500).send("Failed to get expenses");
     }
   },
-  // getAllByCategory: async (req: Request, res: Response) => {
-  //   const { category } = req.params;
-
-  //   try {
-  //     const expenses = await getAllByCategoryService(category);
-  //     res.status(200).json(expenses);
-  //   } catch (error) {
-  //     console.error(error);
-  //     res.status(500).send("Failed to get expenses");
-  //   }
-  // },
   getAllExpensesByDate: async (req: Request, res: Response) => {
     const { day, month, year } = req.query;
 
@@ -147,17 +137,25 @@ const expensesController = {
   },
   addMonthGoals: async (req: Request, res: Response) => {
     try {
-      const { month, year, category, goal, notes } = req.body;
-      if (!month || !year || !category || !goal) {
+      const { month, year, category, goalAmount, notes } = req.body;
+      if (!month || !year || !category || !goalAmount) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      await addMonthGoalsService(month, year, category, goal, notes);
+      await addMonthGoalsService(month, year, category, goalAmount, notes);
 
       res.status(201).json({ message: "Goals added successfully" });
     } catch (error) {
-      console.error(error);
-      res.status(500).send("Internal Server Error");
+      console.log(error);
+      if (
+        error instanceof CategoryNotFoundError ||
+        error instanceof CategoryGoalAlreadyExistsError
+      ) {
+        res.status(400).json({ error: error.message });
+      } else {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      }
     }
   },
 };
