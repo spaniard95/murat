@@ -1,36 +1,21 @@
 import { db } from "../database.ts";
+import { isValidMoneyAmount } from "../lib/validators/commonValidators.ts";
 import {
   isValidDay,
   isValidMonth,
   isValidYear,
 } from "../lib/validators/dateValidators.ts";
+import {
+  CategoryGoalAlreadyExistsError,
+  CategoryNotFoundError,
+  SubcategoryNotFoundError,
+} from "./errors.ts";
 
 import type {
   Expense,
   AddExpenceOptions,
   CategoryWithSubcategories,
 } from "./types.ts";
-
-class CategoryNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "CategoryNotFoundError";
-  }
-}
-
-class SubcategoryNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "SubcategoryNotFoundError";
-  }
-}
-
-class CategoryGoalAlreadyExistsError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "CategoryGoalAlreadyExistsError";
-  }
-}
 
 // get all categories with their subcategories, and group all the subcategories under the category
 // ex. [{category_name: "Food", subcategories: ["Groceries", "Restaurants"]}]
@@ -78,10 +63,10 @@ const addExpenseService = async (
   const { category, subcategory, amount, date, notes } = expense;
 
   // Validate the input
-  if (!amount || isNaN(amount)) {
+  if (!amount || !isValidMoneyAmount(amount)) {
     throw new Error("Invalid amount provided");
   }
-  if (!date || isNaN(Date.parse(date))) {
+  if (!date || !isValidMonth(date) || !isValidYear(date)) {
     throw new Error("Invalid expense date provided");
   }
   if (!category) {
@@ -225,6 +210,17 @@ const addCategoryService = async (category: string) => {
 
 // add a new subcategory connected to a category
 const addSubcategoryService = async (category: string, subcategory: string) => {
+  if (!category) {
+    throw new Error("Category is required");
+  }
+  if (!subcategory) {
+    throw new Error("Subcategory is required");
+  }
+
+  if (category !== "string" || subcategory !== "string") {
+    throw new Error("Invalid input");
+  }
+
   try {
     // Check if the category exists
     const categoryResult = await db`
@@ -236,7 +232,6 @@ const addSubcategoryService = async (category: string, subcategory: string) => {
     const categoryId = categoryResult[0].id;
 
     // Check if the subcategory exists
-    let subcategoryId = null;
     let subcategoryResult = await db`
         SELECT id FROM expenses_subcategories WHERE name = ${subcategory}
       `;
@@ -248,7 +243,8 @@ const addSubcategoryService = async (category: string, subcategory: string) => {
         `;
       console.log("New subcategory added ", subcategory);
     }
-    subcategoryId = subcategoryResult[0].id;
+
+    return { message: "Subcategory added successfully" };
   } catch (e) {
     console.log(e);
     throw new Error("Failed to add subcategory");
@@ -264,6 +260,20 @@ const addMonthGoalsService = async (
   notes?: string
 ) => {
   // Validate the input in the future
+  if (!category) {
+    throw new Error("Missing required fields");
+  }
+  if (!month || !isValidMonth(month.toString())) {
+    throw new Error("Invalid month provided");
+  }
+
+  if (!year || !isValidYear(year.toString())) {
+    throw new Error("Invalid year provided");
+  }
+
+  if (!goalAmount || !isValidMoneyAmount(goalAmount)) {
+    throw new Error("Invalid goal amount provided");
+  }
 
   try {
     // Check if the category exists
@@ -307,9 +317,6 @@ export {
   addExpenseService,
   getAllExpensesByDateService,
   getAllExpensesService,
-  CategoryNotFoundError,
-  SubcategoryNotFoundError,
-  CategoryGoalAlreadyExistsError,
   getAllCategoriesWithSubcategories,
   addCategoryService,
   addSubcategoryService,
