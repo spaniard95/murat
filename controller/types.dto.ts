@@ -1,5 +1,5 @@
 export type AddExpenseDTO = {
-  date: string;
+  date: Date;
   category: string;
   subcategory: string;
   amount: number;

@@ -1,8 +1,8 @@
-export const isValidDay = (day: string) =>
+export const isValidDayNumber = (day: number) =>
   Number(day) >= 1 && Number(day) <= 31;
 
-export const isValidMonth = (month: string) =>
+export const isValidMonthNumber = (month: number) =>
   Number(month) >= 1 && Number(month) <= 12;
 
-export const isValidYear = (year: string) =>
-  Number(year) >= 1900 && Number(year) <= 2100;
+export const isValidYearNumber = (year: number) =>
+  Number(year) >= 1995 && Number(year) <= 2095;

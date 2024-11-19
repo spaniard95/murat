@@ -2,7 +2,7 @@ export interface Expense {
   category: string;
   subcategory: string;
   amount: number;
-  date: string;
+  date: Date;
   notes?: string;
 }
 

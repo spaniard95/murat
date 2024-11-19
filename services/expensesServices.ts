@@ -1,9 +1,9 @@
 import { db } from "../database.ts";
 import { isValidMoneyAmount } from "../lib/validators/commonValidators.ts";
 import {
-  isValidDay,
-  isValidMonth,
-  isValidYear,
+  isValidDayNumber,
+  isValidMonthNumber,
+  isValidYearNumber,
 } from "../lib/validators/dateValidators.ts";
 import {
   CategoryGoalAlreadyExistsError,
@@ -66,7 +66,8 @@ const addExpenseService = async (
   if (!amount || !isValidMoneyAmount(amount)) {
     throw new Error("Invalid amount provided");
   }
-  if (!date || !isValidMonth(date) || !isValidYear(date)) {
+
+  if (!date) {
     throw new Error("Invalid expense date provided");
   }
   if (!category) {
@@ -152,21 +153,21 @@ const getAllExpensesService = async () => {
 // this service requires as input the month, if the year is not specified the current year will be used, day is optional but is disabled for now
 // QUESTION: should I also make the month optional and default it the current month?
 const getAllExpensesByDateService = async (
-  month: string,
-  year?: string,
-  day?: string
+  month: number,
+  year?: number,
+  day?: number
 ) => {
   const currentDate = new Date();
-  const currentYear = year ?? currentDate.getFullYear().toString();
+  const currentYear = year ?? currentDate.getFullYear();
 
   // Validate the inputs
-  if (!isValidMonth(month)) {
+  if (!isValidMonthNumber(month)) {
     throw new Error("Request: getAllExpenses-Invalid month provided");
   }
-  if (!isValidYear(currentYear)) {
+  if (!isValidYearNumber(currentYear)) {
     throw new Error("Request: getAllExpenses-Invalid year provided");
   }
-  if (day && !isValidDay(day)) {
+  if (day && !isValidDayNumber(day)) {
     throw new Error("Request: getAllExpenses-Invalid day provided");
   }
 
@@ -263,11 +264,11 @@ const addMonthGoalsService = async (
   if (!category) {
     throw new Error("Missing required fields");
   }
-  if (!month || !isValidMonth(month.toString())) {
+  if (!month || !isValidMonthNumber(month)) {
     throw new Error("Invalid month provided");
   }
 
-  if (!year || !isValidYear(year.toString())) {
+  if (!year || !isValidYearNumber(year)) {
     throw new Error("Invalid year provided");
   }
 
@@ -313,6 +314,30 @@ const addMonthGoalsService = async (
   }
 };
 
+const getMonthGoalsService = async (month: number, year: number) => {
+  if (!month || !isValidMonthNumber(month)) {
+    throw new Error("Invalid month provided");
+  }
+  if (!year || !isValidYearNumber(year)) {
+    throw new Error("Invalid year provided");
+  }
+
+  try {
+    return await db`
+      SELECT g.id AS goal_id,
+             g.goalAmount,
+             g.notes,
+             c.name AS category_name
+      FROM expenses_month_goals g
+      JOIN expenses_categories c ON g.category_id = c.id
+      WHERE g.month = ${month} AND g.year = ${year};
+    `;
+  } catch (e) {
+    console.log(e);
+    throw new Error("Failed to fetch goals");
+  }
+};
+
 export {
   addExpenseService,
   getAllExpensesByDateService,
@@ -321,4 +346,5 @@ export {
   addCategoryService,
   addSubcategoryService,
   addMonthGoalsService,
+  getMonthGoalsService,
 };

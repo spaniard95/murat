@@ -73,4 +73,13 @@ expensesRouter.post("/monthGoals/add", async (req: Request, res: Response) => {
   }
 });
 
+expensesRouter.get("/monthGoals", async (req: Request, res: Response) => {
+  try {
+    await controller.getGoalsByMonth(req, res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send();
+  }
+});
+
 export default expensesRouter;

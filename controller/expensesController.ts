@@ -8,6 +8,7 @@ import {
   addCategoryService,
   addSubcategoryService,
   addMonthGoalsService,
+  getMonthGoalsService,
 } from "../services/expensesServices.ts";
 import {
   CategoryGoalAlreadyExistsError,
@@ -16,6 +17,7 @@ import {
 } from "../services/errors.ts";
 
 import { AddExpenseDTO, AddMonthGoalsDTO } from "./types.dto.ts";
+import { isValidMonthNumber } from "../lib/validators/dateValidators.ts";
 
 const expensesController = {
   addExpense: async (req: Request, res: Response) => {
@@ -24,7 +26,7 @@ const expensesController = {
         req.body as AddExpenseDTO;
 
       // if no date is provided, use the current date
-      const currentDate = date ?? new Date().toISOString().split("T")[0];
+      const currentDate = date ?? new Date();
 
       if (!category || !amount || !subcategory) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -159,6 +161,29 @@ const expensesController = {
         console.error(error);
         res.status(500).send("Internal Server Error");
       }
+    }
+  },
+  getGoalsByMonth: async (req: Request, res: Response) => {
+    try {
+      const { month, year } = req.query as { month: number; year: number };
+      if (!month) {
+        return res
+          .status(400)
+          .json({ message: "Missing required field month" });
+      }
+
+      if (isValidMonthNumber(month)) {
+        return res.status(400).json({ message: "Invalid month" });
+      }
+
+      const currentYear = year ?? new Date().getFullYear();
+
+      const goals = await getMonthGoalsService(month, currentYear);
+
+      res.status(200).json(goals);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
     }
   },
 };
