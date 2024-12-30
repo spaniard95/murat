@@ -15,51 +15,51 @@ import type {
   Expense,
   AddExpenceOptions,
   CategoryWithSubcategories,
+  GET_CategoriesResponse,
 } from "./types.ts";
 
 // get all categories with their subcategories, and group all the subcategories under the category
 // ex. [{category_name: "Food", subcategories: ["Groceries", "Restaurants"]}]
-const getAllCategoriesWithSubcategories = async (): Promise<
-  CategoryWithSubcategories[]
-> => {
-  try {
-    // @ts-ignore
-    const data: {
-      category_name: string;
-      subcategory_name: string;
-      category_id: number;
-      subcategory_id: number;
-    }[] = await db`
+const getAllCategoriesWithSubcategories =
+  async (): Promise<GET_CategoriesResponse> => {
+    try {
+      // @ts-ignore
+      const data: {
+        category_name: string;
+        subcategory_name: string;
+        category_id: number;
+        subcategory_id: number;
+      }[] = await db`
       SELECT c.name AS category_name, s.name AS subcategory_name, c.id AS category_id, s.id AS subcategory_id
       FROM expenses_categories c
       JOIN expenses_subcategories s ON c.id = s.category_id;
     `;
 
-    const categoriesMap: { [key: number]: CategoryWithSubcategories } = {};
+      const categoriesMap: { [key: number]: CategoryWithSubcategories } = {};
 
-    data.forEach((item) => {
-      if (!categoriesMap[item.category_id]) {
-        categoriesMap[item.category_id] = {
-          id: item.category_id,
-          name: item.category_name,
-          subcategories: [],
-        };
-      }
-      categoriesMap[item.category_id].subcategories.push({
-        id: item.subcategory_id,
-        name: item.subcategory_name,
+      data.forEach((item) => {
+        if (!categoriesMap[item.category_id]) {
+          categoriesMap[item.category_id] = {
+            id: item.category_id,
+            name: item.category_name,
+            subcategories: [],
+          };
+        }
+        categoriesMap[item.category_id].subcategories.push({
+          id: item.subcategory_id,
+          name: item.subcategory_name,
+        });
       });
-    });
 
-    const categoriesWithSubcategories: CategoryWithSubcategories[] =
-      Object.values(categoriesMap);
+      const categoriesWithSubcategories: CategoryWithSubcategories[] =
+        Object.values(categoriesMap);
 
-    return categoriesWithSubcategories;
-  } catch (e) {
-    console.log(e);
-    throw new Error("Failed to fetch categories with subcategories");
-  }
-};
+      return { categories: categoriesWithSubcategories };
+    } catch (e) {
+      console.log(e);
+      throw new Error("Failed to fetch categories with subcategories");
+    }
+  };
 
 const addExpenseService = async (
   expense: Expense,

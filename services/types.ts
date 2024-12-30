@@ -19,3 +19,7 @@ export interface CategoryWithSubcategories {
   name: string;
   subcategories: Subcategory[];
 }
+
+export interface GET_CategoriesResponse {
+  categories: CategoryWithSubcategories[];
+}
