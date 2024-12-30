@@ -24,29 +24,37 @@ const getAllCategoriesWithSubcategories = async (): Promise<
 > => {
   try {
     // @ts-ignore
-    const data: { category_name: string; subcategory_name: string }[] =
-      await db`
-      SELECT c.name AS category_name, s.name AS subcategory_name
+    const data: {
+      category_name: string;
+      subcategory_name: string;
+      category_id: number;
+      subcategory_id: number;
+    }[] = await db`
+      SELECT c.name AS category_name, s.name AS subcategory_name, c.id AS category_id, s.id AS subcategory_id
       FROM expenses_categories c
       JOIN expenses_subcategories s ON c.id = s.category_id;
     `;
 
-    const categoryMap: { [key: string]: string[] } = {};
+    const categoriesMap: { [key: number]: CategoryWithSubcategories } = {};
 
-    data.forEach(
-      (item: { category_name: string; subcategory_name: string }) => {
-        const category = item.category_name;
-        if (!categoryMap[category]) {
-          categoryMap[category] = [];
-        }
-        categoryMap[category].push(item.subcategory_name);
+    data.forEach((item) => {
+      if (!categoriesMap[item.category_id]) {
+        categoriesMap[item.category_id] = {
+          id: item.category_id,
+          name: item.category_name,
+          subcategories: [],
+        };
       }
-    );
+      categoriesMap[item.category_id].subcategories.push({
+        id: item.subcategory_id,
+        name: item.subcategory_name,
+      });
+    });
 
-    return Object.keys(categoryMap).map((category) => ({
-      category_name: category,
-      subcategories: categoryMap[category],
-    }));
+    const categoriesWithSubcategories: CategoryWithSubcategories[] =
+      Object.values(categoriesMap);
+
+    return categoriesWithSubcategories;
   } catch (e) {
     console.log(e);
     throw new Error("Failed to fetch categories with subcategories");

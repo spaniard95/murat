@@ -10,8 +10,12 @@ export type AddExpenceOptions = {
   ifCategoryExistsAddNew?: boolean;
   ifSubcategoryExistsAddNew?: boolean;
 };
-
+type Subcategory = {
+  id: number;
+  name: string;
+};
 export interface CategoryWithSubcategories {
-  category_name: string;
-  subcategories: string[];
+  id: number;
+  name: string;
+  subcategories: Subcategory[];
 }
