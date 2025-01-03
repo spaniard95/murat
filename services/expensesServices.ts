@@ -183,19 +183,18 @@ const getAllExpensesByDateService = async (
   //  ${day ? db`AND EXTRACT(DAY FROM e.expense_date) = ${day}` : ""}
   try {
     const expenses = await db`
-      SELECT e.id AS expense_id,
-             e.amount,
-             e.expense_date,
-             e.notes,
-             c.name AS category_name,
-             s.name AS subcategory_name
-      FROM expenses e
-      JOIN expenses_categories c ON e.category_id = c.id
-      JOIN expenses_subcategories s ON e.subcategory_id = s.id
-       WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear}
-        AND EXTRACT(MONTH FROM e.expense_date) = ${month};
-    `;
-
+    SELECT e.id AS expense_id,
+           e.amount,
+           e.expense_date,
+           e.notes,
+           e.category_id,
+           e.subcategory_id
+    FROM expenses e
+    JOIN expenses_categories c ON e.category_id = c.id
+    JOIN expenses_subcategories s ON e.subcategory_id = s.id
+    WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear}
+      AND EXTRACT(MONTH FROM e.expense_date) = ${month};
+  `;
     return { expenses };
   } catch (e) {
     console.log(e);

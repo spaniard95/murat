@@ -1,7 +1,7 @@
 import express from "express";
 import expensesRouter from "./router/expensesRouter.ts";
 
-const port = Number(Deno.env.get("PORT")) || 3000;
+const port = Number(Deno.env.get("PORT")) || 4000;
 
 const app = express();
 
