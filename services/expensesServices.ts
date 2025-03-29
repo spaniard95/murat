@@ -184,7 +184,7 @@ const getAllExpensesByDateService = async (
   try {
     const expenses = await db`
     SELECT e.id AS expense_id,
-           e.amount,
+           CAST(e.amount AS FLOAT) AS amount, -- Cast amount to a numeric type
            e.expense_date,
            e.notes,
            e.category_id,
