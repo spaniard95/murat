@@ -5,6 +5,29 @@ const port = Number(Deno.env.get("PORT")) || 4000;
 
 const app = express();
 
+const allowedOrigins = [
+  "https://your-frontend-domain.com", // Production
+];
+
+//  CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin ?? "";
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+    return;
+  }
+
+  next();
+});
+
 app.use(express.json());
 app.use("/expenses", expensesRouter);
 
