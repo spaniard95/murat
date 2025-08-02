@@ -13,11 +13,19 @@ const allowedOrigins = [
 //  CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin ?? "";
-  console.log("CORS request from origin:", origin);
+  console.log("=== CORS DEBUG ===");
+  console.log("Request origin:", `"${origin}"`);
+  console.log("Allowed origins:", allowedOrigins);
+  console.log("Origin found:", allowedOrigins.includes(origin));
+  console.log("Origin length:", origin.length);
+  console.log("==================");
+
   if (allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
+    console.log("✅ CORS origin set to:", origin);
+  } else {
+    console.log("❌ Origin not allowed - no CORS header set");
   }
-
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
