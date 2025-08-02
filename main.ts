@@ -6,7 +6,7 @@ const port = Number(Deno.env.get("PORT")) || 4000;
 const app = express();
 
 const allowedOrigins = [
-  "https://lassale-mu.vercel.app/", // Production
+  "https://lassale-mu.vercel.app", // Production
 ];
 
 //  CORS middleware
