@@ -7,14 +7,17 @@ const app = express();
 
 const allowedOrigins = [
   "https://lassale-mu.vercel.app", // Production
+  "https://localhost:3000", // Local development
 ];
 
 //  CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin ?? "";
+  console.log("CORS request from origin:", origin);
   if (allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
   }
+  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins for development purposes
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
