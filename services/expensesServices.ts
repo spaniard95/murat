@@ -16,6 +16,8 @@ import type {
   AddExpenceOptions,
   CategoryWithSubcategories,
   GET_CategoriesResponse,
+  ExpensesByDateService,
+  ExpenseItem,
 } from "./types.ts";
 
 // get all categories with their subcategories, and group all the subcategories under the category
@@ -157,48 +159,70 @@ const getAllExpensesService = async () => {
     console.log(e);
   }
 };
+const getAllExpensesByDateService = async (month: number, year: number) => {
+  const currentDate = new Date();
+  const currentYear = year ?? currentDate.getFullYear();
 
-// this service requires as input the month, if the year is not specified the current year will be used, day is optional but is disabled for now
-// QUESTION: should I also make the month optional and default it the current month?
-const getAllExpensesByDateService = async (
-  month: number,
-  year?: number,
-  day?: number
-) => {
+  if (
+    month === undefined ||
+    month === null ||
+    isNaN(month) ||
+    !isValidMonthNumber(month)
+  ) {
+    console.error(`Invalid month provided: ${month}, converted to: ${month}`);
+    throw new Error("Request: getAllExpenses-Invalid month provided");
+  }
+
+  if (!isValidYearNumber(currentYear)) {
+    throw new Error("Request: getAllExpenses-Invalid year provided");
+  }
+
+  try {
+    const expenses = await db`
+      SELECT e.id AS expense_id,
+             CAST(e.amount AS FLOAT) AS amount,
+             e.expense_date,
+             e.notes,
+             e.category_id,
+             e.subcategory_id
+      FROM expenses e
+      JOIN expenses_categories c ON e.category_id = c.id
+      JOIN expenses_subcategories s ON e.subcategory_id = s.id
+      WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear}
+        AND EXTRACT(MONTH FROM e.expense_date) = ${month}
+    `;
+
+    return { expenses };
+  } catch (e) {
+    console.log(e);
+    throw new Error("Failed to fetch expenses");
+  }
+};
+
+const getAllExpensesByYearService = async (year: number) => {
   const currentDate = new Date();
   const currentYear = year ?? currentDate.getFullYear();
 
   // Validate the inputs
-  if (!isValidMonthNumber(month)) {
-    throw new Error("Request: getAllExpenses-Invalid month provided");
-  }
   if (!isValidYearNumber(currentYear)) {
     throw new Error("Request: getAllExpenses-Invalid year provided");
   }
-  if (day && !isValidDayNumber(day)) {
-    throw new Error("Request: getAllExpenses-Invalid day provided");
-  }
-
-  //  TODO: check why the blow line doesnt work when added to the query
-  //  ${day ? db`AND EXTRACT(DAY FROM e.expense_date) = ${day}` : ""}
   try {
     const expenses = await db`
-    SELECT e.id AS expense_id,
-           CAST(e.amount AS FLOAT) AS amount, -- Cast amount to a numeric type
-           e.expense_date,
-           e.notes,
-           e.category_id,
-           e.subcategory_id
-    FROM expenses e
-    JOIN expenses_categories c ON e.category_id = c.id
-    JOIN expenses_subcategories s ON e.subcategory_id = s.id
-    WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear}
-      AND EXTRACT(MONTH FROM e.expense_date) = ${month};
-  `;
+      SELECT e.id AS expense_id,
+              CAST(e.amount AS FLOAT) AS amount, -- Cast amount to a numeric type
+              e.expense_date,
+              e.notes,
+              e.category_id,
+              e.subcategory_id
+      FROM expenses e
+      JOIN expenses_categories c ON e.category_id = c.id
+      JOIN expenses_subcategories s ON e.subcategory_id = s.id
+      WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear};
+    `;
     return { expenses };
   } catch (e) {
     console.log(e);
-    // TODO: log the specific error- ex. invalid month
     throw new Error("Failed to fetch expenses");
   }
 };
@@ -354,4 +378,5 @@ export {
   addSubcategoryService,
   addMonthGoalsService,
   getMonthGoalsService,
+  getAllExpensesByYearService,
 };

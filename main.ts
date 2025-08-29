@@ -8,6 +8,8 @@ const app = express();
 const allowedOrigins = [
   "https://lassale-mu.vercel.app", // Production
   "https://lassale-mu.vercel.app/", // Production with trailing slash
+  "http://localhost:3000", // Development
+  "http://localhost:3000/", // Development with trailing slash
 ];
 
 //  CORS middleware

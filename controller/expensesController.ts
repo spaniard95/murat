@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 
 import {
   addExpenseService,
@@ -8,7 +8,6 @@ import {
   addCategoryService,
   addSubcategoryService,
   addMonthGoalsService,
-  getMonthGoalsService,
 } from "../services/expensesServices.ts";
 import {
   CategoryGoalAlreadyExistsError,
@@ -17,7 +16,12 @@ import {
 } from "../services/errors.ts";
 
 import { AddExpenseDTO, AddMonthGoalsDTO } from "./types.dto.ts";
-import { isValidMonthNumber } from "../lib/validators/dateValidators.ts";
+import {
+  isValidDayNumber,
+  isValidMonthNumber,
+  isValidYearNumber,
+} from "../lib/validators/dateValidators.ts";
+import { ExpensesByDateService } from "../services/types.ts";
 
 const expensesController = {
   addExpense: async (req: Request, res: Response) => {
@@ -82,10 +86,42 @@ const expensesController = {
     }
   },
   getAllExpensesByDate: async (req: Request, res: Response) => {
+    // fix this
+    // make 3 services, one for day month year, one for monthyear, one for year
+    // cant find way to make it work with one service
     const { day, month, year } = req.query;
 
+    // INPUT VALIDATION
+    if (!year) {
+      return res.status(400).json({ error: "Year is required" });
+    }
+    const parsedYear = parseInt(year as string, 10);
+    if (isNaN(parsedYear) || !isValidYearNumber(parsedYear)) {
+      return res.status(400).json({ error: "Invalid year provided" });
+    }
+
+    const parsedMonth = parseInt(month as string, 10);
+    if (
+      parsedMonth !== undefined &&
+      (isNaN(parsedMonth) || !isValidMonthNumber(parsedMonth))
+    ) {
+      return res.status(400).json({ error: "Invalid month provided" });
+    }
+
+    const parsedDay = parseInt(day as string, 10) || undefined;
+    if (
+      parsedDay !== undefined &&
+      (isNaN(parsedDay) || !isValidDayNumber(parsedDay))
+    ) {
+      return res.status(400).json({ error: "Invalid day provided" });
+    }
+
     try {
-      const expenses = await getAllExpensesByDateService(month, year, day);
+      const expenses = await getAllExpensesByDateService(
+        parsedMonth,
+        parsedYear
+      );
+      console.log(expenses);
       res.status(200).json(expenses);
     } catch (error) {
       console.error(error);
@@ -163,29 +199,29 @@ const expensesController = {
       }
     }
   },
-  getGoalsByMonth: async (req: Request, res: Response) => {
-    try {
-      const { month, year } = req.query as { month: number; year: number };
-      if (!month) {
-        return res
-          .status(400)
-          .json({ message: "Missing required field month" });
-      }
+  //   getGoalsByMonth: async (req: Request, res: Response) => {
+  //     try {
+  //       const { month, year } = req.query as { month: number; year: number };
+  //       if (!month) {
+  //         return res
+  //           .status(400)
+  //           .json({ message: "Missing required field month" });
+  //       }
 
-      if (isValidMonthNumber(month)) {
-        return res.status(400).json({ message: "Invalid month" });
-      }
+  //       if (isValidMonthNumber(month)) {
+  //         return res.status(400).json({ message: "Invalid month" });
+  //       }
 
-      const currentYear = year ?? new Date().getFullYear();
+  //       const currentYear = year ?? new Date().getFullYear();
 
-      const goals = await getMonthGoalsService(month, currentYear);
+  //       const goals = await getMonthGoalsService(month, currentYear);
 
-      res.status(200).json(goals);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Internal Server Error");
-    }
-  },
+  //       res.status(200).json(goals);
+  //     } catch (error) {
+  //       console.error(error);
+  //       res.status(500).send("Internal Server Error");
+  //     }
+  //   },
 };
 
 export default expensesController;
