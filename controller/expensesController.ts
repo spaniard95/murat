@@ -86,41 +86,42 @@ const expensesController = {
     }
   },
   getAllExpensesByDate: async (req: Request, res: Response) => {
-    // fix this
-    // make 3 services, one for day month year, one for monthyear, one for year
-    // cant find way to make it work with one service
     const { day, month, year } = req.query;
 
     // INPUT VALIDATION
     if (!year) {
       return res.status(400).json({ error: "Year is required" });
     }
+
+    if (!month) {
+      return res.status(400).json({ error: "Month is required" });
+    }
+
     const parsedYear = parseInt(year as string, 10);
     if (isNaN(parsedYear) || !isValidYearNumber(parsedYear)) {
       return res.status(400).json({ error: "Invalid year provided" });
     }
 
     const parsedMonth = parseInt(month as string, 10);
-    if (
-      parsedMonth !== undefined &&
-      (isNaN(parsedMonth) || !isValidMonthNumber(parsedMonth))
-    ) {
+    if (isNaN(parsedMonth) || !isValidMonthNumber(parsedMonth)) {
       return res.status(400).json({ error: "Invalid month provided" });
     }
 
-    const parsedDay = parseInt(day as string, 10) || undefined;
-    if (
-      parsedDay !== undefined &&
-      (isNaN(parsedDay) || !isValidDayNumber(parsedDay))
-    ) {
-      return res.status(400).json({ error: "Invalid day provided" });
+    let parsedDay: number | undefined = undefined;
+    if (day) {
+      parsedDay = parseInt(day as string, 10);
+      if (isNaN(parsedDay) || !isValidDayNumber(parsedDay)) {
+        return res.status(400).json({ error: "Invalid day provided" });
+      }
     }
 
     try {
       const expenses = await getAllExpensesByDateService(
         parsedMonth,
-        parsedYear
+        parsedYear,
+        parsedDay
       );
+
       console.log(expenses);
       res.status(200).json(expenses);
     } catch (error) {

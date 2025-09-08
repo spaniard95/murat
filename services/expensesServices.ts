@@ -159,39 +159,59 @@ const getAllExpensesService = async () => {
     console.log(e);
   }
 };
-const getAllExpensesByDateService = async (month: number, year: number) => {
-  const currentDate = new Date();
-  const currentYear = year ?? currentDate.getFullYear();
 
-  if (
-    month === undefined ||
-    month === null ||
-    isNaN(month) ||
-    !isValidMonthNumber(month)
-  ) {
-    console.error(`Invalid month provided: ${month}, converted to: ${month}`);
+const getAllExpensesByDateService = async (
+  month: number,
+  year: number,
+  day?: number
+) => {
+  if (day !== undefined) {
+    if (isNaN(day) || !isValidDayNumber(day)) {
+      throw new Error("Request: getAllExpenses-Invalid day provided");
+    }
+  }
+  if (isNaN(month) || !isValidMonthNumber(month)) {
     throw new Error("Request: getAllExpenses-Invalid month provided");
   }
 
-  if (!isValidYearNumber(currentYear)) {
+  if (isNaN(year) || !isValidYearNumber(year)) {
     throw new Error("Request: getAllExpenses-Invalid year provided");
   }
 
   try {
-    const expenses = await db`
-      SELECT e.id AS expense_id,
-             CAST(e.amount AS FLOAT) AS amount,
-             e.expense_date,
-             e.notes,
-             e.category_id,
-             e.subcategory_id
-      FROM expenses e
-      JOIN expenses_categories c ON e.category_id = c.id
-      JOIN expenses_subcategories s ON e.subcategory_id = s.id
-      WHERE EXTRACT(YEAR FROM e.expense_date) = ${currentYear}
-        AND EXTRACT(MONTH FROM e.expense_date) = ${month}
-    `;
+    let expenses;
 
+    // Find better way to do this
+    if (day !== undefined) {
+      expenses = await db`
+        SELECT e.id AS expense_id,
+               CAST(e.amount AS FLOAT) AS amount,
+               e.expense_date,
+               e.notes,
+               e.category_id,
+               e.subcategory_id
+        FROM expenses e
+        JOIN expenses_categories c ON e.category_id = c.id
+        JOIN expenses_subcategories s ON e.subcategory_id = s.id
+        WHERE EXTRACT(YEAR FROM e.expense_date) = ${year}
+          AND EXTRACT(MONTH FROM e.expense_date) = ${month}
+          AND EXTRACT(DAY FROM e.expense_date) = ${day}
+      `;
+    } else {
+      expenses = await db`
+        SELECT e.id AS expense_id,
+               CAST(e.amount AS FLOAT) AS amount,
+               e.expense_date,
+               e.notes,
+               e.category_id,
+               e.subcategory_id
+        FROM expenses e
+        JOIN expenses_categories c ON e.category_id = c.id
+        JOIN expenses_subcategories s ON e.subcategory_id = s.id
+        WHERE EXTRACT(YEAR FROM e.expense_date) = ${year}
+          AND EXTRACT(MONTH FROM e.expense_date) = ${month}
+      `;
+    }
     return { expenses };
   } catch (e) {
     console.log(e);
